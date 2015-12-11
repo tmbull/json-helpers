@@ -1,12 +1,14 @@
 {
     "version": "1.0.0",
-    "summary": "Helpers for Json encoding and decoding of sum types"
+    "summary": "Helpers for Json encoding and decoding of sum types",
     "repository": "https://github.com/bartavelle/json-helpers.git",
     "license": "BSD3",
     "source-directories": [
         "."
     ],
-    "exposed-modules": [ "Json.Helpers" ],
+    "exposed-modules": [
+        "Json.Helpers"
+    ],
     "dependencies": {
         "elm-lang/core": "3.0.0 <= v < 4.0.0"
     },
