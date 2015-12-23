@@ -9,6 +9,13 @@ module Json.Helpers ( ObjectEncoding
                     , encodeSumTaggedObject
                     , decodeMap
                     , encodeMap
+                    , jsonEncDict
+                    , jsonDecDict
+                    , encodeSet
+                    , decodeSet
+                    , decodeSumUnaries
+                    , maybe
+                    , maybeEncode
                     ) where
 
 {-| This module exposes helper functions for encoding sum types and maps. It was designed
@@ -53,9 +60,13 @@ The following Elm type will be used as an example for the different encoding sch
 
 @docs decodeSumTaggedObject, encodeSumTaggedObject
 
-# Map helpers
+## Unary sum types
 
-@docs decodeMap, encodeMap
+@docs decodeSumUnaries
+
+# Containers helpers
+
+@docs decodeMap, encodeMap, jsonEncDict, jsonDecDict, encodeSet, decodeSet, maybe, maybeEncode
 
 -}
 
@@ -85,6 +96,12 @@ maybe : b -> (a -> b) -> Maybe a -> b
 maybe n j m = case m of
     Nothing -> n
     Just a -> j a
+
+{-# Encodes an optional value, using `null` when there is `Nothing` -}
+maybeEncode : (a -> Value) -> Maybe a -> Value
+maybeEncode e v = case v of
+    Nothing -> Json.Encode.null
+    Just a -> e a
 
 resmapM : (a -> Result r b) -> List a -> Result r (List b)
 resmapM f lst = case lst of
@@ -162,6 +179,7 @@ encodeSumTaggedObject fieldname contentname mkkeyval v =
         EValue  val -> Json.Encode.object [ kp, (contentname, val) ]
         EObject obj -> Json.Encode.object ( kp :: obj )
 
+{-| Helper for decoding enum-like sum types -}
 decodeSumUnaries : String -> Dict String a -> Json.Decode.Decoder a
 decodeSumUnaries typename mapping = Json.Decode.string `Json.Decode.andThen` \s -> case Dict.get s mapping of
     Nothing -> Json.Decode.fail ("Could not decode " ++ typename)
@@ -182,3 +200,18 @@ encodeMap encKey encVal =
             Ok s -> s
     in  Json.Encode.object << List.map (\(k,v) -> (encKey' k, encVal v)) << Dict.toList
 
+{-| An alias to `encodeMap` that is compatible with the naming convention from `elm-bridge` -}
+jsonEncDict : (comparable -> Json.Encode.Value) -> (v -> Json.Encode.Value) -> Dict comparable v -> Json.Encode.Value
+jsonEncDict = encodeMap
+
+{-| An alias to `decodeMap` that is compatible with the naming convention from `elm-bridge` -}
+jsonDecDict : Json.Decode.Decoder comparable -> Json.Decode.Decoder v -> Json.Decode.Decoder (Dict comparable v)
+jsonDecDict = decodeMap
+
+{-# A helper for set encoding -}
+encodeSet : (comparable -> Json.Encode.Value) -> Set comparable -> Json.Encode.Value
+encodeSet e s = Json.Encode.list (List.map e (Set.toList s))
+
+{-# A helper for set decoding -}
+decodeSet : Json.Decode.Decoder comparable -> Json.Decode.Decoder (Set comparable)
+decodeSet d = Json.Decode.map Set.fromList (Json.Decode.list d)
