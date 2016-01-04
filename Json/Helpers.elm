@@ -14,7 +14,6 @@ module Json.Helpers ( ObjectEncoding
                     , encodeSet
                     , decodeSet
                     , decodeSumUnaries
-                    , maybe
                     , maybeEncode
                     ) where
 
@@ -66,7 +65,7 @@ The following Elm type will be used as an example for the different encoding sch
 
 # Containers helpers
 
-@docs decodeMap, encodeMap, jsonEncDict, jsonDecDict, encodeSet, decodeSet, maybe, maybeEncode
+@docs decodeMap, encodeMap, jsonEncDict, jsonDecDict, encodeSet, decodeSet, maybeEncode
 
 -}
 
@@ -91,11 +90,6 @@ oeValue : ObjectEncoding -> Value
 oeValue x = case x of
     EObject o -> Json.Encode.object o
     EValue  v -> v
-
-maybe : b -> (a -> b) -> Maybe a -> b
-maybe n j m = case m of
-    Nothing -> n
-    Just a -> j a
 
 {-# Encodes an optional value, using `null` when there is `Nothing` -}
 maybeEncode : (a -> Value) -> Maybe a -> Value
