@@ -91,7 +91,7 @@ oeValue x = case x of
     EObject o -> Json.Encode.object o
     EValue  v -> v
 
-{-# Encodes an optional value, using `null` when there is `Nothing` -}
+{-| Encodes an optional value, using `null` when there is `Nothing` -}
 maybeEncode : (a -> Value) -> Maybe a -> Value
 maybeEncode e v = case v of
     Nothing -> Json.Encode.null
@@ -202,10 +202,10 @@ jsonEncDict = encodeMap
 jsonDecDict : Json.Decode.Decoder comparable -> Json.Decode.Decoder v -> Json.Decode.Decoder (Dict comparable v)
 jsonDecDict = decodeMap
 
-{-# A helper for set encoding -}
+{-| A helper for set encoding -}
 encodeSet : (comparable -> Json.Encode.Value) -> Set comparable -> Json.Encode.Value
 encodeSet e s = Json.Encode.list (List.map e (Set.toList s))
 
-{-# A helper for set decoding -}
+{-| A helper for set decoding -}
 decodeSet : Json.Decode.Decoder comparable -> Json.Decode.Decoder (Set comparable)
 decodeSet d = Json.Decode.map Set.fromList (Json.Decode.list d)
