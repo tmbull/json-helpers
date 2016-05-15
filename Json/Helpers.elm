@@ -1,4 +1,4 @@
-module Json.Helpers ( ObjectEncoding
+module Json.Helpers exposing ( ObjectEncoding
                     , encodeValue
                     , encodeObject
                     , decodeSumObjectWithSingleField
@@ -15,7 +15,7 @@ module Json.Helpers ( ObjectEncoding
                     , decodeSet
                     , decodeSumUnaries
                     , maybeEncode
-                    ) where
+                    ) 
 
 {-| This module exposes helper functions for encoding sum types and maps. It was designed
 with an eye for compatibility with the `aeson` library from the Haskell world, which explains
