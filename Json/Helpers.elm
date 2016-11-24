@@ -74,7 +74,7 @@ The following Elm type will be used as an example for the different encoding sch
 import Dict exposing (Dict)
 import Set exposing (Set)
 import Json.Encode
-import Json.Decode exposing ((:=), Value)
+import Json.Decode exposing (field, Value)
 
 
 {-| This is an opaque type that is to be used to give hints when using the `TaggedObject` encoding.
@@ -130,6 +130,17 @@ resmapM f lst =
             f x |> Result.andThen (\nx -> resmapM f xs |> Result.andThen (\nxs -> Ok (nx :: nxs)))
 
 
+-- polyfill from https://groups.google.com/d/msg/elm-dev/Ctl_kSKJuYc/7nCM8XETBwAJ
+customDecoder decoder toResult =
+    Json.Decode.andThen
+        (\a ->
+            case toResult a of
+                Ok b -> Json.Decode.succeed b
+                Err err -> Json.Decode.fail err
+        )
+        decoder
+
+
 {-| Decode objects encoded using the `ObjectWithSingleField` scheme.
 The first argument is the human readable name of the type of data, and will be used in error messages.
 The second argument is a `Dict` where the keys are the tags of each constructor of the sum type and the values
@@ -137,7 +148,7 @@ are decoders for each case.
 -}
 decodeSumObjectWithSingleField : String -> Dict String (Json.Decode.Decoder a) -> Json.Decode.Decoder a
 decodeSumObjectWithSingleField name mapping =
-    Json.Decode.customDecoder (Json.Decode.keyValuePairs Json.Decode.value)
+    customDecoder (Json.Decode.keyValuePairs Json.Decode.value)
         (\lst ->
             case lst of
                 [ ( key, value ) ] ->
@@ -155,7 +166,7 @@ are decoders for each case.
 -}
 decodeSumTwoElemArray : String -> Dict String (Json.Decode.Decoder a) -> Json.Decode.Decoder a
 decodeSumTwoElemArray name mapping =
-    Json.Decode.customDecoder (Json.Decode.tuple2 (,) Json.Decode.string Json.Decode.value) (\( key, value ) -> decodeSumFinal name key value mapping)
+    customDecoder (Json.Decode.map2 (,) Json.Decode.string Json.Decode.value) (\( key, value ) -> decodeSumFinal name key value mapping)
 
 
 {-| Decode objects encoded using the `TaggedObject` scheme.
@@ -168,7 +179,7 @@ such as the `Baz` constructor in the example.
 -}
 decodeSumTaggedObject : String -> String -> String -> Dict String (Json.Decode.Decoder a) -> Set String -> Json.Decode.Decoder a
 decodeSumTaggedObject name fieldname contentname mapping objectKeys =
-    (fieldname := Json.Decode.string)
+    (field fieldname Json.Decode.string)
         |> Json.Decode.andThen
             (\key ->
                 let
@@ -176,9 +187,9 @@ decodeSumTaggedObject name fieldname contentname mapping objectKeys =
                         if Set.member key objectKeys then
                             Json.Decode.value
                         else
-                            contentname := Json.Decode.value
+                            field contentname Json.Decode.value
                 in
-                    Json.Decode.customDecoder decoder (\value -> decodeSumFinal name key value mapping)
+                    customDecoder decoder (\value -> decodeSumFinal name key value mapping)
             )
 
 
@@ -266,7 +277,7 @@ decodeMap decKey decVal =
         decodeKey ( k, v ) =
             Result.map (\nk -> ( nk, v )) (Json.Decode.decodeString decKey k)
     in
-        Json.Decode.map Dict.fromList (Json.Decode.customDecoder (Json.Decode.keyValuePairs decVal) decodeKeys)
+        Json.Decode.map Dict.fromList (customDecoder (Json.Decode.keyValuePairs decVal) decodeKeys)
 
 
 {-| Helper function for encoding map-like objects. It takes an encoder for the key type and an encoder for the value type
