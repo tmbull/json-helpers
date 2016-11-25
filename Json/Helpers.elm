@@ -130,6 +130,12 @@ resmapM f lst =
             f x |> Result.andThen (\nx -> resmapM f xs |> Result.andThen (\nxs -> Ok (nx :: nxs)))
 
 
+-- polyfill
+tuple2 : (a -> b -> value) -> Json.Decode.Decoder a -> Json.Decode.Decoder b -> Json.Decode.Decoder value
+tuple2 abv da db =
+    Json.Decode.map2 abv (Json.Decode.index 0 da) (Json.Decode.index 1 db)
+
+
 -- polyfill from https://groups.google.com/d/msg/elm-dev/Ctl_kSKJuYc/7nCM8XETBwAJ
 customDecoder decoder toResult =
     Json.Decode.andThen
@@ -166,7 +172,7 @@ are decoders for each case.
 -}
 decodeSumTwoElemArray : String -> Dict String (Json.Decode.Decoder a) -> Json.Decode.Decoder a
 decodeSumTwoElemArray name mapping =
-    customDecoder (Json.Decode.map2 (,) Json.Decode.string Json.Decode.value) (\( key, value ) -> decodeSumFinal name key value mapping)
+    customDecoder (tuple2 (,) Json.Decode.string Json.Decode.value) (\( key, value ) -> decodeSumFinal name key value mapping)
 
 
 {-| Decode objects encoded using the `TaggedObject` scheme.
