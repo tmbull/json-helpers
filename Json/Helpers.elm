@@ -17,6 +17,8 @@ module Json.Helpers
         , decodeSet
         , decodeSumUnaries
         , maybeEncode
+        , (>>=)
+        , (:=)
         )
 
 {-| This module exposes helper functions for encoding sum types and maps. It was designed
@@ -67,7 +69,7 @@ The following Elm type will be used as an example for the different encoding sch
 
 # Containers helpers
 
-@docs decodeMap, encodeMap, jsonEncDict, jsonDecDict, encodeSet, decodeSet, maybeEncode
+@docs decodeMap, encodeMap, jsonEncDict, jsonDecDict, encodeSet, decodeSet, maybeEncode, (>>=), (:=)
 
 -}
 
@@ -328,3 +330,10 @@ encodeSet e s =
 decodeSet : Json.Decode.Decoder comparable -> Json.Decode.Decoder (Set comparable)
 decodeSet d =
     Json.Decode.map Set.fromList (Json.Decode.list d)
+
+{-| The bind operator, which works like the old `andThen -}
+(>>=) : Json.Decode.Decoder a -> (a -> Json.Decode.Decoder b) -> Json.Decode.Decoder b
+(>>=) = flip Json.Decode.andThen
+
+(:=) : String -> Json.Decode.Decoder a -> Json.Decode.Decoder a
+(:=) = Json.Decode.field
