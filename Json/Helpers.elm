@@ -335,5 +335,6 @@ decodeSet d =
 (>>=) : Json.Decode.Decoder a -> (a -> Json.Decode.Decoder b) -> Json.Decode.Decoder b
 (>>=) = flip Json.Decode.andThen
 
+{-| This is the old operator from Elm 0.17 -}
 (:=) : String -> Json.Decode.Decoder a -> Json.Decode.Decoder a
 (:=) = Json.Decode.field
