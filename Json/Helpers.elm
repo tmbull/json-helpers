@@ -15,6 +15,7 @@ module Json.Helpers
         , jsonDecDict
         , encodeSet
         , decodeSet
+        , decodeSumNullaries
         , decodeSumUnaries
         , maybeEncode
         , (>>=)
@@ -63,9 +64,10 @@ The following Elm type will be used as an example for the different encoding sch
 
 @docs decodeSumTaggedObject, encodeSumTaggedObject
 
-## Unary sum types
+## Nullary sum types
 
 @docs decodeSumUnaries
+@docs decodeSumNullaries
 
 # Containers helpers
 
@@ -260,8 +262,8 @@ encodeSumTaggedObject fieldname contentname mkkeyval v =
 
 {-| Helper for decoding enum-like sum types
 -}
-decodeSumUnaries : String -> Dict String a -> Json.Decode.Decoder a
-decodeSumUnaries typename mapping =
+decodeSumNullaries : String -> Dict String a -> Json.Decode.Decoder a
+decodeSumNullaries typename mapping =
     Json.Decode.string
         |> Json.Decode.andThen
             (\s ->
@@ -272,6 +274,11 @@ decodeSumUnaries typename mapping =
                     Just x ->
                         Json.Decode.succeed x
             )
+
+{-| This function is deprecated, use `decodeSumNullaries` (it is the same, only with an appropriate name)
+-}
+decodeSumUnaries : String -> Dict String a -> Json.Decode.Decoder a
+decodeSumUnaries = decodeSumNullaries
 
 
 {-| Helper function for decoding map-like objects. It takes a decoder for the key type and a decoder for the value type.
