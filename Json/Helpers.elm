@@ -17,6 +17,7 @@ module Json.Helpers
         , decodeSet
         , decodeSumNullaries
         , decodeSumUnaries
+        , decodeSumNullaryOrSingleField
         , maybeEncode
         , (>>=)
         , (:=)
@@ -68,6 +69,8 @@ The following Elm type will be used as an example for the different encoding sch
 
 @docs decodeSumUnaries
 @docs decodeSumNullaries
+
+@docs decodeSumNullaryOrSingleField
 
 # Containers helpers
 
@@ -280,6 +283,14 @@ decodeSumNullaries typename mapping =
 decodeSumUnaries : String -> Dict String a -> Json.Decode.Decoder a
 decodeSumUnaries = decodeSumNullaries
 
+{-| A convenience function to decode objects that are represented as a sum type containing only nullary or unary constructors -}
+
+-- Code copied from radix, see https://github.com/bartavelle/json-helpers/issues/4
+decodeSumNullaryOrSingleField : String -> Dict String a -> Dict String (Json.Decode.Decoder a) -> Json.Decode.Decoder a
+decodeSumNullaryOrSingleField name nullary singlefield = Json.Decode.oneOf
+        [ decodeSumUnaries name nullary
+        , decodeSumObjectWithSingleField name singlefield
+        ]
 
 {-| Helper function for decoding map-like objects. It takes a decoder for the key type and a decoder for the value type.
 -}
