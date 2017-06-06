@@ -9,6 +9,7 @@ module Json.Helpers
         , encodeSumObjectWithSingleField
         , encodeSumTwoElementArray
         , encodeSumTaggedObject
+        , encodeSumUntagged
         , decodeMap
         , encodeMap
         , jsonEncDict
@@ -181,7 +182,6 @@ decodeSumTwoElemArray : String -> Dict String (Json.Decode.Decoder a) -> Json.De
 decodeSumTwoElemArray name mapping =
     customDecoder (tuple2 (,) Json.Decode.string Json.Decode.value) (\( key, value ) -> decodeSumFinal name key value mapping)
 
-
 {-| Decode objects encoded using the `TaggedObject` scheme.
 The first argument is the human readable name of the type of data, and will be used in error messages.
 The second argument is a `Dict` where the keys are the tags of each constructor of the sum type and the values
@@ -214,7 +214,6 @@ decodeSumFinal name key value mapping =
 
         Just dec ->
             Json.Decode.decodeValue dec value
-
 
 {-| Encode objects using the `WithSingleField` scheme.
 The first argument is a function that, for each possible value `a`, must return a `String` tag
@@ -261,6 +260,13 @@ encodeSumTaggedObject fieldname contentname mkkeyval v =
 
             EObject obj ->
                 Json.Encode.object (kp :: obj)
+
+{-| Encode objects using the `Untagged` scheme. -}
+encodeSumUntagged : (a -> ( String, ObjectEncoding )) -> a -> Value
+encodeSumUntagged mkkeyval v
+    = case Tuple.second (mkkeyval v) of
+        EValue val -> val
+        EObject o -> Json.Encode.object o
 
 
 {-| Helper for decoding enum-like sum types
