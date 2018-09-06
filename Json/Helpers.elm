@@ -20,8 +20,7 @@ module Json.Helpers
         , decodeSumUnaries
         , decodeSumNullaryOrSingleField
         , maybeEncode
-        , (>>=)
-        , (:=)
+        , bind
         )
 
 {-| This module exposes helper functions for encoding sum types and maps. It was designed
@@ -75,7 +74,7 @@ The following Elm type will be used as an example for the different encoding sch
 
 # Containers helpers
 
-@docs decodeMap, encodeMap, jsonEncDict, jsonDecDict, encodeSet, decodeSet, maybeEncode, (>>=), (:=), encodeSumUntagged
+@docs decodeMap, encodeMap, jsonEncDict, jsonDecDict, encodeSet, decodeSet, maybeEncode, bind, encodeSumUntagged
 
 -}
 
@@ -145,6 +144,7 @@ tuple2 abv da db =
 
 
 -- polyfill from https://groups.google.com/d/msg/elm-dev/Ctl_kSKJuYc/7nCM8XETBwAJ
+customDecoder : Json.Decode.Decoder a -> (a -> Result String b) -> Json.Decode.Decoder b
 customDecoder decoder toResult =
     Json.Decode.andThen
         (\a ->
@@ -356,9 +356,5 @@ decodeSet d =
     Json.Decode.map Set.fromList (Json.Decode.list d)
 
 {-| The bind operator, which works like the old `andThen -}
-(>>=) : Json.Decode.Decoder a -> (a -> Json.Decode.Decoder b) -> Json.Decode.Decoder b
-(>>=) = flip Json.Decode.andThen
-
-{-| This is the old operator from Elm 0.17 -}
-(:=) : String -> Json.Decode.Decoder a -> Json.Decode.Decoder a
-(:=) = Json.Decode.field
+bind : Json.Decode.Decoder a -> (a -> Json.Decode.Decoder b) -> Json.Decode.Decoder b
+bind = flip Json.Decode.andThen
