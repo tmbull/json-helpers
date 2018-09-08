@@ -6,8 +6,8 @@ module Json.Helpers exposing
     , decodeSumUnaries
     , decodeSumNullaries
     , decodeSumNullaryOrSingleField
-    , decodeMap, encodeMap, jsonEncDict, jsonDecDict, encodeSet, decodeSet, maybeEncode, (:=), encodeSumUntagged
-    , (>>=)
+    , decodeMap, encodeMap, jsonEncDict, jsonDecDict, encodeSet, decodeSet, maybeEncode, encodeSumUntagged
+    , andThen, field
     )
 
 {-| This module exposes helper functions for encoding sum types and maps. It was designed
@@ -387,13 +387,13 @@ decodeSet d =
 
 {-| The bind operator, which works like the old \`andThen
 -}
-(>>=) : Json.Decode.Decoder a -> (a -> Json.Decode.Decoder b) -> Json.Decode.Decoder b
-(>>=) =
+andThen : Json.Decode.Decoder a -> (a -> Json.Decode.Decoder b) -> Json.Decode.Decoder b
+andThen =
     \b a -> Json.Decode.andThen a b
 
 
 {-| This is the old operator from Elm 0.17
 -}
-(:=) : String -> Json.Decode.Decoder a -> Json.Decode.Decoder a
-(:=) =
+field : String -> Json.Decode.Decoder a -> Json.Decode.Decoder a
+field =
     Json.Decode.field
