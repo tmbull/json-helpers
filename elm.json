@@ -4,6 +4,9 @@
     "summary": "Helpers for Json encoding and decoding of sum types",
     "license": "BSD-3-Clause",
     "version": "1.3.0",
+    "source-directories": [
+        "."
+    ],
     "exposed-modules": [
         "Json.Helpers"
     ],
