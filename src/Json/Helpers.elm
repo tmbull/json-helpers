@@ -228,7 +228,7 @@ decodeSumFinal : String -> String -> Value -> Dict String (Json.Decode.Decoder a
 decodeSumFinal name key value mapping =
     case Dict.get key mapping of
         Nothing ->
-            Err ("Unknown constructor " ++ key ++ " for type " ++ name)
+            Err <| Json.Decode.Failure ("Unknown constructor " ++ key ++ " for type " ++ name) value
 
         Just dec ->
             Json.Decode.decodeValue dec value
@@ -257,7 +257,7 @@ encodeSumTwoElementArray mkkeyval v =
         ( key, val ) =
             mkkeyval v
     in
-    Json.Encode.list [ Json.Encode.string key, oeValue val ]
+    Json.Encode.list identity [ Json.Encode.string key, oeValue val ]
 
 
 {-| Encode objects using the `TaggedObject` scheme.
@@ -348,14 +348,14 @@ decodeMap decKey decVal =
 
 {-| Helper function for encoding map-like objects. It takes an encoder for the key type and an encoder for the value type
 -}
-encodeMap : (comparable -> Json.Encode.Value) -> (v -> Json.Encode.Value) -> Dict comparable v -> Json.Encode.Value
+encodeMap : (comparable -> Value) -> (v -> Json.Encode.Value) -> Dict comparable v -> Json.Encode.Value
 encodeMap encKey encVal =
-    Json.Encode.dict encKey encVal
+    Json.Encode.dict (Json.Encode.encode 0 << encKey) encVal
 
 
 {-| An alias to `encodeMap` that is compatible with the naming convention from `elm-bridge`
 -}
-jsonEncDict : (comparable -> Json.Encode.Value) -> (v -> Json.Encode.Value) -> Dict comparable v -> Json.Encode.Value
+jsonEncDict : (comparable -> Value) -> (v -> Json.Encode.Value) -> Dict comparable v -> Json.Encode.Value
 jsonEncDict =
     encodeMap
 
@@ -371,7 +371,7 @@ jsonDecDict =
 -}
 encodeSet : (comparable -> Json.Encode.Value) -> Set comparable -> Json.Encode.Value
 encodeSet e s =
-    Json.Encode.list (List.map e (Set.toList s))
+    Json.Encode.list e (Set.toList s)
 
 
 {-| A helper for set decoding
