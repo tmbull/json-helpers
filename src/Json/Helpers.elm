@@ -345,16 +345,7 @@ decodeMap decKey decVal =
 -}
 encodeMap : (comparable -> Json.Encode.Value) -> (v -> Json.Encode.Value) -> Dict comparable v -> Json.Encode.Value
 encodeMap encKey encVal =
-    let
-        encKey_ x =
-            case Json.Decode.decodeValue Json.Decode.string (encKey x) of
-                Err _ ->
-                    toString x
-
-                Ok s ->
-                    s
-    in
-    Json.Encode.object << List.map (\( k, v ) -> ( encKey_ k, encVal v )) << Dict.toList
+    Json.Encode.dict encKey encVal
 
 
 {-| An alias to `encodeMap` that is compatible with the naming convention from `elm-bridge`
