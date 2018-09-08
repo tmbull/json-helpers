@@ -81,9 +81,10 @@ The following Elm type will be used as an example for the different encoding sch
 -}
 
 import Dict exposing (Dict)
-import Json.Decode exposing (Value, field)
+import Json.Decode exposing (Value, errorToString, field)
 import Json.Encode
 import Set exposing (Set)
+import Tuple exposing (second)
 
 
 {-| This is an opaque type that is to be used to give hints when using the `TaggedObject` encoding.
@@ -152,6 +153,7 @@ tuple2 abv da db =
 -- polyfill from https://groups.google.com/d/msg/elm-dev/Ctl_kSKJuYc/7nCM8XETBwAJ
 
 
+customDecoder : Json.Decode.Decoder a -> (a -> Result Json.Decode.Error b) -> Json.Decode.Decoder b
 customDecoder decoder toResult =
     Json.Decode.andThen
         (\a ->
@@ -160,7 +162,7 @@ customDecoder decoder toResult =
                     Json.Decode.succeed b
 
                 Err err ->
-                    Json.Decode.fail err
+                    Json.Decode.fail <| errorToString err
         )
         decoder
 
@@ -175,11 +177,14 @@ decodeSumObjectWithSingleField name mapping =
     customDecoder (Json.Decode.keyValuePairs Json.Decode.value)
         (\lst ->
             case lst of
+                [] ->
+                    Err <| Json.Decode.Failure ("Can't decode " ++ name ++ ": object has too few keys") Json.Encode.null
+
                 [ ( key, value ) ] ->
                     decodeSumFinal name key value mapping
 
-                _ ->
-                    Err ("Can't decode " ++ name ++ ": object has too many keys")
+                kv :: kvs ->
+                    Err <| Json.Decode.Failure ("Can't decode " ++ name ++ ": object has too many keys") (second kv)
         )
 
 
@@ -219,7 +224,7 @@ decodeSumTaggedObject name fieldname contentname mapping objectKeys =
             )
 
 
-decodeSumFinal : String -> String -> Value -> Dict String (Json.Decode.Decoder a) -> Result String a
+decodeSumFinal : String -> String -> Value -> Dict String (Json.Decode.Decoder a) -> Result Json.Decode.Error a
 decodeSumFinal name key value mapping =
     case Dict.get key mapping of
         Nothing ->
